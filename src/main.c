@@ -26,6 +26,11 @@ static void update_bg(Layer *layer, GContext *ctx) {
   graphics_fill_rect(ctx, bounds, 0, GCornerNone);
   
   graphics_context_set_fill_color(ctx, GColorWhite);
+#ifdef PBL_COLOR
+  if (bat >= 4 && bat <= 6) {
+    graphics_context_set_fill_color(ctx, GColorBlack);
+  }
+#endif
   graphics_fill_circle(ctx, center, 68);
 #ifdef PBL_COLOR
   if (bat >= 7) {
