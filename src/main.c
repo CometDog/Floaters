@@ -5,9 +5,21 @@
 static void update_bg(Layer *layer, GContext *ctx) {
   GRect bounds = layer_get_bounds(layer);
   GPoint center = grect_center_point(&bounds);
+  
+#ifdef PBL_COLOR
+  bat = battery_state_service_peek().charge_percent / 10;
+#endif
 
 #ifdef PBL_COLOR
-    graphics_context_set_fill_color(ctx, GColorIndigo);
+  if (bat >= 7) {
+    graphics_context_set_fill_color(ctx, GColorIslamicGreen);
+  }
+  else if (bat >= 4) {
+    graphics_context_set_fill_color(ctx, GColorIcterine);
+  }
+  else {
+    graphics_context_set_fill_color(ctx, GColorRed);
+  }
 #else 
     graphics_context_set_fill_color(ctx, GColorBlack);
 #endif
@@ -16,11 +28,19 @@ static void update_bg(Layer *layer, GContext *ctx) {
   graphics_context_set_fill_color(ctx, GColorWhite);
   graphics_fill_circle(ctx, center, 68);
 #ifdef PBL_COLOR
-    graphics_context_set_fill_color(ctx, GColorIndigo); // Set the fill color.
+  if (bat >= 7) {
+    graphics_context_set_fill_color(ctx, GColorIslamicGreen);
+  }
+  else if (bat >= 4) {
+    graphics_context_set_fill_color(ctx, GColorIcterine);
+  }
+  else {
+    graphics_context_set_fill_color(ctx, GColorRed);
+  }
 #else 
-    graphics_context_set_fill_color(ctx, GColorBlack); // Set the fill color.
+    graphics_context_set_fill_color(ctx, GColorBlack);
 #endif
-  graphics_fill_circle(ctx, center, 63);
+    graphics_fill_circle(ctx, center, 63);
 }
 
 static void update_time(Layer *layer, GContext *ctx) {
@@ -40,9 +60,19 @@ static void update_time(Layer *layer, GContext *ctx) {
   int hourY = -23 * cos_lookup(hour_angle) / TRIG_MAX_RATIO + center.y;
   
   graphics_context_set_fill_color(ctx, GColorWhite);
+#ifdef PBL_COLOR
+  if (bat >= 4 && bat <= 6) {
+    graphics_context_set_fill_color(ctx, GColorBlack);
+  }
+#endif
   
   graphics_fill_circle(ctx, GPoint(minX, minY), 8);
   graphics_fill_circle(ctx, GPoint(hourX, hourY), 13);
+}
+
+static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
+  layer_mark_dirty(s_time_layer);
+  layer_mark_dirty(s_background_layer);
 }
 
 static void main_window_load(Window *window) {
@@ -67,6 +97,7 @@ static void init() {
   s_main_window = window_create();
   window_handlers(s_main_window, main_window_load, main_window_unload);
   window_stack_push(s_main_window, true);
+  tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
 }
 
 static void deinit() {
